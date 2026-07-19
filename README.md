@@ -131,7 +131,11 @@ python models/content_based.py
   separately). Not deduplicated by content similarity yet.
 - Dataset is scoped to a single category (men's clothing/polos appear
   heavily) rather than a full cross-category Amazon catalog.
-
+- Collaborative filtering (20.9% explained variance with SVD) occasionally
+  surfaces a thematically unrelated recommendation. This traces to the
+  synthetic user simulation's built-in cross-category noise (~20% of each
+  synthetic user's reviews are drawn from outside their "home category"),
+  which real user data wouldn't exhibit as strongly.
 ## Roadmap
 
 1. ✅ Data Collection & Cleaning
