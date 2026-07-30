@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>For You — ShopSense</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/app" class="text-xl font-bold text-gray-900">ShopSense</a>
+      <div class="flex gap-6 text-sm font-medium text-gray-600">
+        <a href="/app" class="hover:text-gray-900">Home</a>
+        <a href="/app/for-you.html" class="hover:text-gray-900">For You</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-lg font-semibold text-gray-900 mb-2">Personalized Recommendations</h1>
+      <p class="text-sm text-gray-500 mb-4">
+        Demo data note: user IDs below are synthetic (simulated) shoppers built from this
+        project's review data, used to demonstrate collaborative filtering.
+      </p>
+      <div class="flex gap-2">
+        <input id="user-input" type="text" placeholder="e.g. synth_user_2101"
+               class="border rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-gray-900">
+        <button id="load-btn" class="bg-gray-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-700">
+          Get Recommendations
+        </button>
+      </div>
+    </div>
+
+    <div id="recs-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  </main>
+
+  <script src="/static/product-card.js"></script>
+  <script src="/static/for-you.js"></script>
+</body>
+</html>

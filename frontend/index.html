@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ShopSense — Smart Recommendations</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold text-gray-900">ShopSense</h1>
+      <div class="flex gap-6 text-sm font-medium text-gray-600">
+        <a href="/app" class="hover:text-gray-900">Home</a>
+        <a href="/app/for-you.html" class="hover:text-gray-900">For You</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">Trending Now</h2>
+      </div>
+      <div id="popular-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <p class="text-gray-400 text-sm">Loading...</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">All Products</h2>
+        <input id="search-box" type="text" placeholder="Search products..."
+               class="border rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-gray-900">
+      </div>
+      <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <p class="text-gray-400 text-sm">Loading...</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/product-card.js"></script>
+  <script src="/static/home.js"></script>
+</body>
+</html>

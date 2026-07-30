@@ -8,6 +8,19 @@ from models.popularity import get_top_products
 
 app = FastAPI(title="E-commerce Recommendation API", version="1.0")
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
+
+@app.get("/app")
+def serve_frontend():
+    return FileResponse("frontend/index.html")
+
+@app.get("/app/{page_name}")
+def serve_frontend_page(page_name: str):
+    return FileResponse(f"frontend/{page_name}")
+
 
 # ---------- Response models (define the exact JSON shape we return) ----------
 
