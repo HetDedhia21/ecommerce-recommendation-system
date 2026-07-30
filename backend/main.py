@@ -101,6 +101,6 @@ def full_hybrid_recommendations(
 def popular_products(top_n: int = Query(10, le=50)):
     """Popularity-based / trending products."""
     result = get_top_products(top_n)
-    return result[["asin", "title", "brand_name", "rating_stars_clean", "rating_count_clean"]].to_dict(
+    return result[["asin", "title", "brand_name", "price_value", "rating_stars_clean", "rating_count_clean"]].to_dict(
         orient="records"
     )
