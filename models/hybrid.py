@@ -1,6 +1,11 @@
 import pandas as pd
 import numpy as np
 import pickle
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def load_all_cached():
+    return load_all()
 
 MODEL_DIR = "models"
 PRODUCTS_PATH = "data/processed/products_clean.csv"
@@ -126,7 +131,7 @@ def get_association_boost(user_id, cf_data, rules, products):
 
 
 def hybrid_recommend(user_id=None, seed_asin=None, top_n=10):
-    content_data, cf_data, rules, popularity, sentiment, products = load_all()
+    content_data, cf_data, rules, popularity, sentiment, products = load_all_cached()
     products["audience"] = products["breadcrumbs"].apply(get_audience)  # ADD THIS
 
     popularity = popularity[["asin", "popularity_score"]]

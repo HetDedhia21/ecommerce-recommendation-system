@@ -46,7 +46,7 @@ def build_popularity_score():
     products = products.drop_duplicates(subset=["title"], keep="first")
 
     products = products.sort_values("popularity_score", ascending=False)
-    products[["asin", "title", "rating_count_clean", "rating_stars_clean",
+    products[["asin", "title", "brand_name", "rating_count_clean", "rating_stars_clean",
               "recent_purchases_clean", "avg_sentiment", "popularity_score"]].to_csv(
         "data/processed/popularity_ranking.csv", index=False
     )
