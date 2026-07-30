@@ -9,13 +9,23 @@ function renderProductDetail(product) {
   const price = product.price_value ? `$${product.price_value.toFixed(2)}` : "Price unavailable";
   const stars = product.rating_stars_clean ? `★ ${product.rating_stars_clean}` : "";
   const reviewCount = product.rating_count_clean ? `(${product.rating_count_clean.toLocaleString()} ratings)` : "";
+  const img = product.image_url
+    ? `<img src="${product.image_url}" alt="${product.title}"
+         class="w-full md:w-72 h-72 object-contain bg-white rounded-xl border"
+         onerror="this.onerror=null;this.src='https://placehold.co/300x300/f3f4f6/9ca3af?text=No+Image';">`
+    : `<div class="w-full md:w-72 h-72 bg-gray-100 rounded-xl flex items-center justify-center text-gray-300 text-sm">No image</div>`;
 
   document.getElementById("product-detail").innerHTML = `
-    <p class="text-sm text-gray-400 mb-2">${product.brand_name || ""}</p>
-    <h1 class="text-2xl font-bold text-gray-900 mb-4">${product.title}</h1>
-    <div class="flex items-center gap-4 mb-4">
-      <span class="text-2xl font-semibold text-gray-900">${price}</span>
-      <span class="text-amber-600">${stars} <span class="text-gray-400 text-sm">${reviewCount}</span></span>
+    <div class="flex flex-col md:flex-row gap-6">
+      ${img}
+      <div class="flex-1">
+        <p class="text-sm text-gray-400 mb-2">${product.brand_name || ""}</p>
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">${product.title}</h1>
+        <div class="flex items-center gap-4">
+          <span class="text-2xl font-semibold text-gray-900">${price}</span>
+          <span class="text-amber-500">${stars} <span class="text-gray-400 text-sm">${reviewCount}</span></span>
+        </div>
+      </div>
     </div>
   `;
 }

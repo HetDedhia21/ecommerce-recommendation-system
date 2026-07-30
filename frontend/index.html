@@ -5,7 +5,7 @@
   <title>ShopSense — Smart Recommendations</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-[#fafafa] min-h-screen">
 
   <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -17,12 +17,12 @@
     </div>
   </nav>
 
-  <main class="max-w-6xl mx-auto px-4 py-8">
+  <main class="max-w-6xl mx-auto px-4 py-10">
     <section class="mb-10">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-gray-900">Trending Now</h2>
       </div>
-      <div id="popular-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div id="popular-grid" class="grid grid-cols-2 md:grid-cols-4 gap-5">
         <p class="text-gray-400 text-sm">Loading...</p>
       </div>
     </section>
@@ -33,7 +33,7 @@
         <input id="search-box" type="text" placeholder="Search products..."
                class="border rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-gray-900">
       </div>
-      <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-5">
         <p class="text-gray-400 text-sm">Loading...</p>
       </div>
     </section>

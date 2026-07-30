@@ -13,9 +13,29 @@ def fix_encoding(text):
         return ""
     return ftfy.fix_text(str(text))
 
+import ast
+
+def extract_main_image(all_images_str):
+    if pd.isna(all_images_str):
+        return ""
+    try:
+        images = ast.literal_eval(all_images_str)
+    except (ValueError, SyntaxError):
+        return ""
+
+    if not isinstance(images, list) or len(images) == 0:
+        return ""
+
+    # Skip video-thumbnail overlays, pick the first real product photo
+    for url in images:
+        if "play-button-overlay" not in url and url.startswith("http"):
+            return url
+
+    return ""
 
 def clean_products(df):
     df = df.copy()
+    df["image_url"] = df["all_images"].apply(extract_main_image)
 
     # Fix mojibake in text fields
     text_cols = ["title", "about_item", "product_description", "brand_name"]

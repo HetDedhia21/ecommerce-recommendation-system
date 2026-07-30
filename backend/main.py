@@ -28,6 +28,7 @@ class RecommendationItem(BaseModel):
     asin: str
     title: str
     brand_name: Optional[str] = None
+    image_url: Optional[str] = None
     final_score: Optional[float] = None
 
 
@@ -36,6 +37,7 @@ class ProductOut(BaseModel):
     title: str
     brand_name: Optional[str] = None
     price_value: Optional[float] = None
+    image_url: Optional[str] = None
     rating_stars_clean: Optional[float] = None
     rating_count_clean: Optional[int] = None
 
@@ -114,6 +116,6 @@ def full_hybrid_recommendations(
 def popular_products(top_n: int = Query(10, le=50)):
     """Popularity-based / trending products."""
     result = get_top_products(top_n)
-    return result[["asin", "title", "brand_name", "price_value", "rating_stars_clean", "rating_count_clean"]].to_dict(
+    return result[["asin", "title", "brand_name", "price_value", "image_url", "rating_stars_clean", "rating_count_clean"]].to_dict(
         orient="records"
     )
