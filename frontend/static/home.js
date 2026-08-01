@@ -6,24 +6,29 @@ async function loadPopular() {
   document.getElementById("popular-grid").innerHTML = data.map(renderProductCard).join("");
 }
 
-async function loadProducts(limit = 20) {
-  const res = await fetch(`${API}/products?limit=${limit}`);
+async function loadProducts(limit = 24, offset = 0) {
+  const res = await fetch(`${API}/products?limit=${limit}&offset=${offset}`);
   const data = await res.json();
   document.getElementById("products-grid").innerHTML = data.map(renderProductCard).join("");
-  return data;
 }
 
-let allProducts = [];
-
-async function init() {
-  await loadPopular();
-  allProducts = await loadProducts(40);
+async function searchProducts(query) {
+  if (!query) {
+    loadProducts();
+    return;
+  }
+  const res = await fetch(`${API}/products/search?q=${encodeURIComponent(query)}`);
+  const data = await res.json();
+  document.getElementById("products-grid").innerHTML = data.length
+    ? data.map(renderProductCard).join("")
+    : `<p class="text-gray-400 text-sm col-span-4">No products match "${query}".</p>`;
 }
 
+let searchTimeout;
 document.getElementById("search-box").addEventListener("input", (e) => {
-  const q = e.target.value.toLowerCase();
-  const filtered = allProducts.filter(p => p.title.toLowerCase().includes(q));
-  document.getElementById("products-grid").innerHTML = filtered.map(renderProductCard).join("");
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => searchProducts(e.target.value.trim()), 250);
 });
 
-init();
+loadPopular();
+loadProducts();

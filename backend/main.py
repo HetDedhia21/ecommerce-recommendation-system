@@ -119,3 +119,15 @@ def popular_products(top_n: int = Query(10, le=50)):
     return result[["asin", "title", "brand_name", "price_value", "image_url", "rating_stars_clean", "rating_count_clean"]].to_dict(
         orient="records"
     )
+
+@app.get("/products/search", response_model=list[ProductOut])
+def search_products(q: str = Query(..., min_length=1), limit: int = Query(24, le=100)):
+    """Search products by title or brand."""
+    products = pd.read_csv("data/processed/products_clean.csv")
+    q_lower = q.lower()
+    mask = (
+        products["title"].str.lower().str.contains(q_lower, na=False) |
+        products["brand_name"].str.lower().str.contains(q_lower, na=False)
+    )
+    results = products[mask].head(limit)
+    return results.to_dict(orient="records")
