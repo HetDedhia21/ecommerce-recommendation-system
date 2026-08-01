@@ -137,6 +137,47 @@ def list_products(
     page = df.iloc[offset: offset + limit]
     return {"total": total, "items": page.to_dict(orient="records")}    
 
+
+@app.get("/products/search", response_model=ProductListResponse)
+def search_products(
+    q: str = Query(..., min_length=1),
+    limit: int = Query(24, le=100),
+    offset: int = 0,
+    category: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_rating: Optional[float] = None,
+    sort_by: Optional[str] = None,
+):
+    df = get_products_with_audience()
+    q_lower = q.lower()
+    mask = (
+        df["title"].str.lower().str.contains(q_lower, na=False) |
+        df["brand_name"].str.lower().str.contains(q_lower, na=False)
+    )
+    df = df[mask]
+
+    if category:
+        df = df[df["audience"] == category]
+    if min_price is not None:
+        df = df[df["price_value"] >= min_price]
+    if max_price is not None:
+        df = df[df["price_value"] <= max_price]
+    if min_rating is not None:
+        df = df[df["rating_stars_clean"] >= min_rating]
+
+    if sort_by == "price_asc":
+        df = df.sort_values("price_value", ascending=True, na_position="last")
+    elif sort_by == "price_desc":
+        df = df.sort_values("price_value", ascending=False, na_position="last")
+    elif sort_by == "rating_desc":
+        df = df.sort_values("rating_stars_clean", ascending=False, na_position="last")
+
+    total = len(df)
+    page = df.iloc[offset: offset + limit]
+    return {"total": total, "items": page.to_dict(orient="records")}
+
+
 @app.get("/products/{asin}", response_model=ProductDetailOut)
 def get_product(asin: str):
     df = get_products_with_audience()
@@ -204,44 +245,6 @@ def popular_products(top_n: int = Query(10, le=50)):
         orient="records"
     )
 
-@app.get("/products/search", response_model=ProductListResponse)
-def search_products(
-    q: str = Query(..., min_length=1),
-    limit: int = Query(24, le=100),
-    offset: int = 0,
-    category: Optional[str] = None,
-    min_price: Optional[float] = None,
-    max_price: Optional[float] = None,
-    min_rating: Optional[float] = None,
-    sort_by: Optional[str] = None,
-):
-    df = get_products_with_audience()
-    q_lower = q.lower()
-    mask = (
-        df["title"].str.lower().str.contains(q_lower, na=False) |
-        df["brand_name"].str.lower().str.contains(q_lower, na=False)
-    )
-    df = df[mask]
-
-    if category:
-        df = df[df["audience"] == category]
-    if min_price is not None:
-        df = df[df["price_value"] >= min_price]
-    if max_price is not None:
-        df = df[df["price_value"] <= max_price]
-    if min_rating is not None:
-        df = df[df["rating_stars_clean"] >= min_rating]
-
-    if sort_by == "price_asc":
-        df = df.sort_values("price_value", ascending=True, na_position="last")
-    elif sort_by == "price_desc":
-        df = df.sort_values("price_value", ascending=False, na_position="last")
-    elif sort_by == "rating_desc":
-        df = df.sort_values("rating_stars_clean", ascending=False, na_position="last")
-
-    total = len(df)
-    page = df.iloc[offset: offset + limit]
-    return {"total": total, "items": page.to_dict(orient="records")}
 
 @app.get("/categories")
 def list_categories():

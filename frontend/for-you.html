@@ -9,10 +9,14 @@
 
   <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="/app" class="text-xl font-bold text-gray-900">ShopSense</a>
-      <div class="flex gap-6 text-sm font-medium text-gray-600">
+      <h1 class="text-xl font-bold text-gray-900">ShopSense</h1>
+      <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
         <a href="/app" class="hover:text-gray-900">Home</a>
         <a href="/app/for-you.html" class="hover:text-gray-900">For You</a>
+        <a href="/app/cart.html" class="relative hover:text-gray-900">
+          Cart
+          <span id="cart-badge" class="hidden absolute -top-2 -right-3 bg-gray-900 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">0</span>
+        </a>
       </div>
     </div>
   </nav>
@@ -36,6 +40,7 @@
     <div id="recs-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </main>
 
+  <script src="/static/cart.js"></script>
   <script src="/static/product-card.js"></script>
   <script src="/static/for-you.js"></script>
 </body>

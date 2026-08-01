@@ -10,35 +10,90 @@
   <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <h1 class="text-xl font-bold text-gray-900">ShopSense</h1>
-      <div class="flex gap-6 text-sm font-medium text-gray-600">
-        <a href="/app" class="hover:text-gray-900">Home</a>
+      <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
+        <a href="/app" class="text-gray-900">Home</a>
         <a href="/app/for-you.html" class="hover:text-gray-900">For You</a>
+        <a href="/app/cart.html" class="relative hover:text-gray-900">
+          Cart
+          <span id="cart-badge" class="hidden absolute -top-2 -right-3 bg-gray-900 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">0</span>
+        </a>
       </div>
     </div>
   </nav>
 
-  <main class="max-w-6xl mx-auto px-4 py-10">
+  <main class="max-w-6xl mx-auto px-4 py-8">
     <section class="mb-10">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-900">Trending Now</h2>
-      </div>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Trending Now</h2>
       <div id="popular-grid" class="grid grid-cols-2 md:grid-cols-4 gap-5">
         <p class="text-gray-400 text-sm">Loading...</p>
       </div>
     </section>
 
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-900">All Products</h2>
+    <section class="flex flex-col md:flex-row gap-8">
+      <!-- Filter sidebar -->
+      <aside class="w-full md:w-56 shrink-0">
         <input id="search-box" type="text" placeholder="Search products..."
-               class="border rounded-lg px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-gray-900">
-      </div>
-      <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-5">
-        <p class="text-gray-400 text-sm">Loading...</p>
+               class="w-full border rounded-lg px-3 py-2 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-gray-900">
+
+        <div class="mb-5">
+          <p class="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-2">Category</p>
+          <div id="category-list" class="space-y-1 text-sm text-gray-600"></div>
+        </div>
+
+        <div class="mb-5">
+          <p class="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-2">Price</p>
+          <div class="flex items-center gap-2">
+            <input id="min-price" type="number" placeholder="Min" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            <span class="text-gray-400">–</span>
+            <input id="max-price" type="number" placeholder="Max" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+          </div>
+        </div>
+
+        <div class="mb-5">
+          <p class="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-2">Min Rating</p>
+          <select id="min-rating" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            <option value="">Any</option>
+            <option value="4.5">4.5+</option>
+            <option value="4">4.0+</option>
+            <option value="3">3.0+</option>
+          </select>
+        </div>
+
+        <button id="apply-filters" class="w-full bg-gray-900 text-white text-sm py-2 rounded-lg hover:bg-gray-700">
+          Apply Filters
+        </button>
+        <button id="clear-filters" class="w-full text-gray-500 text-xs py-2 hover:underline">
+          Clear all
+        </button>
+      </aside>
+
+      <!-- Product grid -->
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-4">
+          <p id="results-count" class="text-sm text-gray-500"></p>
+          <select id="sort-select" class="border rounded-lg px-2 py-1.5 text-sm">
+            <option value="">Sort: Default</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="rating_desc">Rating: High to Low</option>
+            <option value="popularity">Most Popular</option>
+          </select>
+        </div>
+
+        <div id="products-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-5">
+          <p class="text-gray-400 text-sm">Loading...</p>
+        </div>
+
+        <div class="flex items-center justify-center gap-3 mt-8">
+          <button id="prev-page" class="text-sm px-3 py-1.5 border rounded-lg hover:bg-gray-100 disabled:opacity-40" disabled>Previous</button>
+          <span id="page-info" class="text-sm text-gray-500"></span>
+          <button id="next-page" class="text-sm px-3 py-1.5 border rounded-lg hover:bg-gray-100 disabled:opacity-40">Next</button>
+        </div>
       </div>
     </section>
   </main>
 
+  <script src="/static/cart.js"></script>
   <script src="/static/product-card.js"></script>
   <script src="/static/home.js"></script>
 </body>

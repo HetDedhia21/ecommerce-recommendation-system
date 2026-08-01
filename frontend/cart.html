@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Product — ShopSense</title>
+  <title>Cart — ShopSense</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-[#fafafa] min-h-screen">
 
   <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold text-gray-900">ShopSense</h1>
+      <a href="/app" class="text-xl font-bold text-gray-900">ShopSense</a>
       <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
         <a href="/app" class="hover:text-gray-900">Home</a>
         <a href="/app/for-you.html" class="hover:text-gray-900">For You</a>
-        <a href="/app/cart.html" class="relative hover:text-gray-900">
+        <a href="/app/cart.html" class="relative text-gray-900">
           Cart
           <span id="cart-badge" class="hidden absolute -top-2 -right-3 bg-gray-900 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">0</span>
         </a>
@@ -21,21 +21,14 @@
     </div>
   </nav>
 
-  <main class="max-w-6xl mx-auto px-4 py-8">
-    <div id="product-detail" class="bg-white rounded-xl border p-6 mb-10">
-      <p class="text-gray-400 text-sm">Loading product...</p>
-    </div>
-
-    <section>
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Similar Products</h2>
-      <div id="similar-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <p class="text-gray-400 text-sm">Loading...</p>
-      </div>
-    </section>
+  <main class="max-w-4xl mx-auto px-4 py-10">
+    <h1 class="text-lg font-semibold text-gray-900 mb-6">Your Cart</h1>
+    <div id="cart-items" class="space-y-3 mb-6"></div>
+    <div id="cart-summary" class="bg-white rounded-xl border p-4 flex items-center justify-between"></div>
+    <p class="text-xs text-gray-400 mt-4">Demo cart only — no real checkout/payment is processed.</p>
   </main>
 
   <script src="/static/cart.js"></script>
-  <script src="/static/product-card.js"></script>
-  <script src="/static/product.js"></script>
+  <script src="/static/cart-page.js"></script>
 </body>
 </html>
