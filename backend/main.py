@@ -5,13 +5,40 @@ import pandas as pd
 
 from models.hybrid import hybrid_recommend, get_similar_products, load_all_cached
 from models.popularity import get_top_products
-
 app = FastAPI(title="E-commerce Recommendation API", version="1.0")
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
+
+import ast
+from functools import lru_cache
+
+def compute_audience(breadcrumb):
+    if pd.isna(breadcrumb):
+        return "Unknown"
+    parts = [p.strip() for p in str(breadcrumb).split("›")]
+    return parts[1] if len(parts) > 1 else "Unknown"
+
+
+def parse_all_images(all_images_str, max_images=6):
+    if pd.isna(all_images_str):
+        return []
+    try:
+        images = ast.literal_eval(all_images_str)
+    except (ValueError, SyntaxError):
+        return []
+    if not isinstance(images, list):
+        return []
+    clean = [u for u in images if isinstance(u, str) and u.startswith("http") and "play-button-overlay" not in u]
+    return clean[:max_images]
+
+
+@lru_cache(maxsize=1)
+def get_products_with_audience():
+    df = pd.read_csv("data/processed/products_clean.csv")
+    df["audience"] = df["breadcrumbs"].apply(compute_audience)
+    return df
 
 @app.get("/app")
 def serve_frontend():
@@ -32,7 +59,7 @@ class RecommendationItem(BaseModel):
     final_score: Optional[float] = None
 
 
-class ProductOut(BaseModel):
+class ProductOut(BaseModel):    
     asin: str
     title: str
     brand_name: Optional[str] = None
@@ -42,13 +69,29 @@ class ProductOut(BaseModel):
     rating_count_clean: Optional[int] = None
 
 
+class ProductListResponse(BaseModel):
+    total: int
+    items: list[ProductOut]
+
+
+class ProductDetailOut(ProductOut):
+    images: list[str] = []
+    avg_sentiment: Optional[float] = None
+    positive_pct: Optional[float] = None
+
+
+class ReviewOut(BaseModel):
+    reviewTitle: Optional[str] = None
+    reviewText: str
+    rating: float
+    vader_label: str
+
 # ---------- Startup: warm the model cache once, at boot, not on first request ----------
 
 @app.on_event("startup")
 def warm_cache():
     load_all_cached()
     print("Models loaded and cached.")
-
 
 # ---------- Endpoints ----------
 
@@ -57,22 +100,63 @@ def root():
     return {"message": "E-commerce Recommendation API. See /docs for usage."}
 
 
-@app.get("/products", response_model=list[ProductOut])
-def list_products(limit: int = Query(20, le=100), offset: int = 0):
-    """Browse products, paginated."""
-    products = pd.read_csv("data/processed/products_clean.csv")
-    page = products.iloc[offset: offset + limit]
-    return page.to_dict(orient="records")
+@app.get("/products", response_model=ProductListResponse)
+def list_products(
+    limit: int = Query(24, le=100),
+    offset: int = 0,
+    category: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_rating: Optional[float] = None,
+    brand: Optional[str] = None,
+    sort_by: Optional[str] = None,
+):
+    df = get_products_with_audience()
 
+    if category:
+        df = df[df["audience"] == category]
+    if min_price is not None:
+        df = df[df["price_value"] >= min_price]
+    if max_price is not None:
+        df = df[df["price_value"] <= max_price]
+    if min_rating is not None:
+        df = df[df["rating_stars_clean"] >= min_rating]
+    if brand:
+        df = df[df["brand_name"].str.lower() == brand.lower()]
 
-@app.get("/products/{asin}", response_model=ProductOut)
+    if sort_by == "price_asc":
+        df = df.sort_values("price_value", ascending=True, na_position="last")
+    elif sort_by == "price_desc":
+        df = df.sort_values("price_value", ascending=False, na_position="last")
+    elif sort_by == "rating_desc":
+        df = df.sort_values("rating_stars_clean", ascending=False, na_position="last")
+    elif sort_by == "popularity":
+        df = df.sort_values("rating_count_clean", ascending=False, na_position="last")
+
+    total = len(df)
+    page = df.iloc[offset: offset + limit]
+    return {"total": total, "items": page.to_dict(orient="records")}    
+
+@app.get("/products/{asin}", response_model=ProductDetailOut)
 def get_product(asin: str):
-    """Get a single product's details."""
-    products = pd.read_csv("data/processed/products_clean.csv")
-    row = products[products["asin"] == asin]
+    df = get_products_with_audience()
+    row = df[df["asin"] == asin]
     if len(row) == 0:
         raise HTTPException(status_code=404, detail=f"Product {asin} not found")
-    return row.iloc[0].to_dict()
+
+    product = row.iloc[0].to_dict()
+    product["images"] = parse_all_images(row.iloc[0].get("all_images"))
+
+    try:
+        sentiment_df = pd.read_csv("data/processed/product_sentiment_summary.csv")
+        srow = sentiment_df[sentiment_df["productASIN"] == asin]
+        if len(srow) > 0:
+            product["avg_sentiment"] = float(srow.iloc[0]["avg_sentiment"])
+            product["positive_pct"] = float(srow.iloc[0]["positive_pct"])
+    except FileNotFoundError:
+        pass
+
+    return product
 
 
 @app.get("/recommendations/similar/{asin}", response_model=list[RecommendationItem])
@@ -120,14 +204,56 @@ def popular_products(top_n: int = Query(10, le=50)):
         orient="records"
     )
 
-@app.get("/products/search", response_model=list[ProductOut])
-def search_products(q: str = Query(..., min_length=1), limit: int = Query(24, le=100)):
-    """Search products by title or brand."""
-    products = pd.read_csv("data/processed/products_clean.csv")
+@app.get("/products/search", response_model=ProductListResponse)
+def search_products(
+    q: str = Query(..., min_length=1),
+    limit: int = Query(24, le=100),
+    offset: int = 0,
+    category: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_rating: Optional[float] = None,
+    sort_by: Optional[str] = None,
+):
+    df = get_products_with_audience()
     q_lower = q.lower()
     mask = (
-        products["title"].str.lower().str.contains(q_lower, na=False) |
-        products["brand_name"].str.lower().str.contains(q_lower, na=False)
+        df["title"].str.lower().str.contains(q_lower, na=False) |
+        df["brand_name"].str.lower().str.contains(q_lower, na=False)
     )
-    results = products[mask].head(limit)
-    return results.to_dict(orient="records")
+    df = df[mask]
+
+    if category:
+        df = df[df["audience"] == category]
+    if min_price is not None:
+        df = df[df["price_value"] >= min_price]
+    if max_price is not None:
+        df = df[df["price_value"] <= max_price]
+    if min_rating is not None:
+        df = df[df["rating_stars_clean"] >= min_rating]
+
+    if sort_by == "price_asc":
+        df = df.sort_values("price_value", ascending=True, na_position="last")
+    elif sort_by == "price_desc":
+        df = df.sort_values("price_value", ascending=False, na_position="last")
+    elif sort_by == "rating_desc":
+        df = df.sort_values("rating_stars_clean", ascending=False, na_position="last")
+
+    total = len(df)
+    page = df.iloc[offset: offset + limit]
+    return {"total": total, "items": page.to_dict(orient="records")}
+
+@app.get("/categories")
+def list_categories():
+    df = get_products_with_audience()
+    counts = df[df["audience"] != "Unknown"]["audience"].value_counts()
+    return [{"name": name, "count": int(count)} for name, count in counts.items()]
+
+
+@app.get("/products/{asin}/reviews", response_model=list[ReviewOut])
+def get_product_reviews(asin: str, limit: int = Query(5, le=20)):
+    reviews = pd.read_csv("data/processed/reviews_with_sentiment.csv")
+    product_reviews = reviews[reviews["productASIN"] == asin]
+    if "helpfulVoteCount" in product_reviews.columns:
+        product_reviews = product_reviews.sort_values("helpfulVoteCount", ascending=False)
+    return product_reviews.head(limit).to_dict(orient="records")
