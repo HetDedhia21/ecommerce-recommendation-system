@@ -192,10 +192,10 @@ def hybrid_recommend(user_id=None, seed_asin=None, top_n=10):
         candidates.get(col, 0) * w for col, w in weights.items()
     )
 
-    candidates = candidates.merge(products[["asin", "title", "brand_name", "image_url"]], on="asin", how="left")
+    candidates = candidates.merge(products[["asin", "title", "brand_name", "image_url", "price_value", "rating_stars_clean"]], on="asin", how="left")
     candidates = candidates.sort_values("final_score", ascending=False).drop_duplicates(subset=["asin"])
 
-    return candidates.head(top_n)[["asin", "title", "brand_name", "image_url", "final_score"]], weights
+    return candidates.head(top_n)[["asin", "title", "brand_name", "image_url", "price_value", "rating_stars_clean", "final_score"]], weights
 
 
 if __name__ == "__main__":

@@ -56,6 +56,8 @@ class RecommendationItem(BaseModel):
     title: str
     brand_name: Optional[str] = None
     image_url: Optional[str] = None
+    price_value: Optional[float] = None
+    rating_stars_clean: Optional[float] = None
     final_score: Optional[float] = None
 
 
