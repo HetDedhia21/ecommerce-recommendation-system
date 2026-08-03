@@ -1,104 +1,133 @@
-# E-commerce Recommendation System
+# ShopSense — ML-Powered E-commerce Recommendation Engine
 
-A multi-technique product recommendation engine built on real scraped Amazon
-product and review data, combining content similarity, association rules,
-sentiment analysis, and collaborative filtering into a hybrid system with a
-FastAPI backend.
+A full-stack recommendation system built on real scraped Amazon product and
+review data, combining six recommendation techniques into a hybrid engine,
+served through a FastAPI backend and a working shopping-site frontend
+(browsing, search, filters, cart, personalized recommendations).
 
-## Project Goal
+## Live Demo
 
-Build a smart recommendation engine that suggests products using product
-similarity, purchase/behavior patterns, and review sentiment — demonstrating
-multiple real-world recommendation techniques in one deployable project.
+[Add your deployed link here once live]
 
-## Features
+## Screenshots
 
-**Core (Phase 1)**
-1. Content-Based Recommendation — TF-IDF + Cosine Similarity over product
-   titles/descriptions. ✅ Implemented
-2. Frequently Bought Together — Association Rule Mining (Apriori/FP-Growth)
-   over co-occurrence patterns. 🔲 Planned
+[Add 2-4 screenshots here: home page, product page, for-you page]
 
-**Intermediate (Phase 2)**
-3. Popularity-Based Recommendation (trending / best sellers). 🔲 Planned
-4. Sentiment Analysis on reviews (TextBlob/VADER). 🔲 Planned (a
-   preliminary `sentiment_score` exists in the raw data but needs to be
-   verified/reproduced as part of this project's own pipeline)
+## What This Project Demonstrates
 
-**Advanced (Phase 3)**
-5. Collaborative Filtering (User-Item Matrix, optional SVD). 🔲 Planned
-6. Hybrid Recommendation System combining the above. 🔲 Planned
-
-**Bonus**
-- Rating prediction
-- Explainable recommendations
-- Inventory-based recommendations
-
-## Dataset
-
-Real scraped Amazon data (provided, original scraper unknown):
-- `data/products.csv` — 729 products (title, brand, price, rating stats,
-  description, category breadcrumbs, etc.)
-- `data/reviews.csv` — 6,327 reviews (review text, rating, product link,
-  no original reviewer identity)
-
-### ⚠️ Important note on synthetic data
-
-The raw review data has **no reviewer/user ID column** — only a per-review
-ID and the product it belongs to. This makes genuine Collaborative Filtering
-impossible as-is (CF requires knowing which *user* interacted with which
-*items*).
-
-Since the original scraper is unavailable and re-scraping Amazon reliably
-(bot detection, ToS) wasn't practical, this project uses a **synthetic user
-simulation**: (`backend/utils/generate_synthetic_users.py`) instead of real
-reviewer identities. Each synthetic user is assigned a "home category"
-weighted by real category popularity, and a review count following a
-Zipf/power-law distribution (mirroring the real-world pattern where a small
-number of users leave most reviews). ~80% of a user's reviews are drawn from
-their home category, ~20% from elsewhere, to give collaborative filtering a
-realistic-but-not-real signal to learn from.
-
-**This is clearly synthetic data, generated for demonstration purposes.**
-Any collaborative filtering results in this project reflect simulated
-behavior, not real customer patterns. This is disclosed here and should be
-disclosed again in any writeup, demo, or interview discussion of this
-project.
-
-Current synthetic user stats:
-- 2,064 synthetic users across 6,320 cleaned reviews
-- Average 3.06 reviews per user
-- 1,693 users (82%) have 2+ reviews (i.e. usable for CF)
-- Max reviews by one simulated user: 14
+- **Content-Based Filtering** — TF-IDF + cosine similarity over product text
+- **Association Rule Mining** — Apriori, brand-level co-occurrence patterns
+- **Popularity-Based Ranking** — weighted blend of rating volume, quality,
+  purchase momentum, and sentiment
+- **Sentiment Analysis** — VADER, run on raw review text, cross-validated
+  against star ratings
+- **Collaborative Filtering** — Truncated SVD matrix factorization over a
+  mean-centered user-item matrix
+- **Hybrid Recommendation System** — mode-adaptive weighted blend of all of
+  the above, with an audience-consistency filter to keep recommendations
+  on-theme
+- A real FastAPI backend (10+ endpoints) and a working frontend: browsing,
+  category filters, price/rating filters, sorting, pagination, search,
+  cart, and product detail pages with reviews and sentiment badges
 
 ## Tech Stack
 
-- **Backend:** Python, Pandas, NumPy, Scikit-learn, FastAPI, Uvicorn
-- **ML/NLP:** TF-IDF, Cosine Similarity, Apriori/FP-Growth, Collaborative
-  Filtering, Sentiment Analysis
-- **Data format:** SQLite/MongoDB optional; currently flat CSV files
+- **Backend:** Python, FastAPI, Uvicorn, Pandas, NumPy
+- **ML/NLP:** Scikit-learn (TF-IDF, cosine similarity, TruncatedSVD),
+  mlxtend (Apriori/association rules), VADER (sentiment analysis)
+- **Frontend:** Vanilla HTML/CSS/JS, Tailwind CSS (CDN), served as static
+  files directly from FastAPI (no build step, no separate frontend server)
+- **Data:** 728 real scraped Amazon products, 6,327 real reviews
+
+## Architecture
+Browser (frontend/) ──HTTP──> FastAPI (backend/main.py) ──reads──> Pickled models (models/*.pkl)
+└──reads──> Processed CSVs (data/processed/)
+
+Models are trained offline (via the scripts in `models/`) and saved as
+`.pkl` files. The API loads them once at startup (`@app.on_event("startup")`)
+and caches them in memory (`lru_cache`) — no retraining happens per-request.
 
 ## Project Structure
 Recommendation system/
 ├── data/
-│   ├── products.csv              # raw scraped product data
-│   ├── reviews.csv               # raw scraped review data
-│   └── processed/
-│       ├── products_clean.csv               # cleaned products
-│       ├── reviews_clean.csv                # cleaned reviews (mojibake fixed)
-│       └── reviews_with_synthetic_users.csv # + synthetic_user_id column
+│ ├── products.csv, reviews.csv # raw scraped data
+│ └── processed/ # cleaned, enriched CSVs
 ├── backend/
-│   └── utils/
-│       ├── data_loader.py                # cleans raw CSVs -> processed CSVs
-│       └── generate_synthetic_users.py   # simulates user IDs for CF
+│ ├── main.py # FastAPI app, all endpoints
+│ └── utils/
+│ ├── data_loader.py # cleaning: mojibake fix, parsing
+│ └── generate_synthetic_users.py # synthetic user simulation
 ├── models/
-│   ├── content_based.py          # TF-IDF + cosine similarity model
-│   └── content_similarity.pkl    # saved similarity matrix (generated, gitignored)
-├── frontend/                     # (not yet built)
-├── notebooks/
-│   └── data_exploration.py       # initial data exploration
+│ ├── content_based.py # TF-IDF + cosine similarity
+│ ├── association_rules.py # Apriori, brand-level
+│ ├── popularity.py # weighted popularity ranking
+│ ├── sentiment_analysis.py # VADER sentiment
+│ ├── collaborative_filtering.py # SVD matrix factorization
+│ └── hybrid.py # combines all of the above
+├── frontend/
+│ ├── index.html, product.html,
+│ │ for-you.html, cart.html
+│ └── static/ # shared JS: cart, product cards
 ├── requirements.txt
 └── README.md
+
+## Key Engineering Decisions
+
+### The missing user-ID problem
+The scraped review data has no reviewer identity — only a per-review ID
+linked to a product. This blocks genuine Collaborative Filtering, which
+needs user-item interaction history. Re-scraping Amazon reliably wasn't
+practical (bot detection, ToS), so this project uses a **documented
+synthetic user simulation** (`generate_synthetic_users.py`): each synthetic
+user gets a "home category" weighted by real category popularity, and a
+review count following a Zipf/power-law distribution (mirroring how a small
+share of real users leave most reviews). ~80% of a user's reviews are drawn
+from their home category, ~20% cross-category, giving collaborative
+filtering a realistic-but-simulated signal.
+
+**This is disclosed here, in-app (see the For You page), and in code
+comments — any CF/association-rule results reflect simulated behavior, not
+real customers.**
+
+### Sparse rating matrix → mean-centering
+An early version of Collaborative Filtering filled missing ratings with 0,
+which SVD misread as "strongly disliked" rather than "unknown" (since 96%+
+of the user-item matrix is empty). Fixed by mean-centering: unknown ratings
+are set to 0 *relative to the global average*, not to an absolute 0. This
+tripled explained variance (7.4% → 19.7%) and produced meaningfully better
+recommendations.
+
+### Audience-consistency filtering in the Hybrid system
+Testing the hybrid recommender surfaced occasional cross-audience noise
+(e.g. a men's-shopping profile getting a women's dress recommended) —
+traced back to the synthetic layer's intentional cross-category noise.
+Rather than just down-weighting Collaborative Filtering's influence (which
+would undercut the point of having built it), the hybrid system filters
+candidates by product audience (Men/Women/Boys/etc., parsed from category
+breadcrumbs) *before* scoring — preserving CF's real signal while removing
+audience-mismatched results.
+
+### Association rules: product-level → brand-level
+Product-level co-occurrence was too sparse to find real patterns (700+
+distinct SKUs, max pair co-occurrence of 3 out of 1,693 baskets). Regrouped
+to brand-level (285 distinct brands), which found 17 real rules, all with
+lift > 1.
+
+## API Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `GET /products` | Browse products — filters: category, price, rating, brand; sort; pagination |
+| `GET /products/search` | Full-catalog search by title/brand, same filters as above |
+| `GET /products/{asin}` | Single product detail, including image gallery + sentiment summary |
+| `GET /products/{asin}/reviews` | Reviews for a product, with VADER sentiment labels |
+| `GET /categories` | List of product categories with counts |
+| `GET /popular` | Popularity-ranked products |
+| `GET /recommendations/similar/{asin}` | Content-based: similar products |
+| `GET /recommendations/for-user/{user_id}` | Personalized: CF + association + popularity |
+| `GET /recommendations/hybrid` | Full hybrid — accepts `user_id`, `seed_asin`, or both |
+
+Interactive docs available at `/docs` once running.
 
 ## Setup
 
@@ -109,46 +138,60 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-## Running the pipeline so far
+## Running the Full Pipeline
 
 ```bash
-# 1. Clean raw data (fixes encoding, parses prices/ratings, builds content_text)
+# 1. Clean raw data
 python backend/utils/data_loader.py
 
-# 2. Generate synthetic user IDs for reviews (needed for collaborative filtering later)
+# 2. Generate synthetic user IDs (for collaborative filtering)
 python backend/utils/generate_synthetic_users.py
 
-# 3. Build content-based similarity model
+# 3. Build all recommendation models
 python models/content_based.py
+python models/association_rules.py
+python models/popularity.py
+python models/sentiment_analysis.py
+python models/collaborative_filtering.py
+
+# 4. Run the app
+uvicorn backend.main:app --reload
 ```
 
-## Known Data Limitations
+Then open `http://127.0.0.1:8000/app` in your browser.
 
-- **No real user identity** in review data — collaborative filtering uses
-  synthetic users (see above).
-- **Duplicate/near-duplicate product listings** — some products appear
-  twice under different ASINs (likely color/size variants scraped
-  separately). Not deduplicated by content similarity yet.
-- Dataset is scoped to a single category (men's clothing/polos appear
-  heavily) rather than a full cross-category Amazon catalog.
-- Collaborative filtering (20.9% explained variance with SVD) occasionally
-  surfaces a thematically unrelated recommendation. This traces to the
-  synthetic user simulation's built-in cross-category noise (~20% of each
-  synthetic user's reviews are drawn from outside their "home category"),
-  which real user data wouldn't exhibit as strongly.
+## Try It
+
+- Browse: `http://127.0.0.1:8000/app`
+- A product page: `http://127.0.0.1:8000/app/product.html?asin=B078LC7GCX`
+- Personalized recs: `http://127.0.0.1:8000/app/for-you.html` (try `synth_user_2101`)
+
+## Known Limitations
+
+- **Synthetic user data** for collaborative filtering (see above) — not
+  real customer behavior.
+- **Near-duplicate product listings** — a small number of products appear
+  under multiple ASINs (likely color/size variants scraped separately).
+  Deduplicated in the popularity ranking by title; not deduplicated
+  elsewhere.
+- **Collaborative filtering explains ~20% of variance** (SVD, 20
+  components) — reasonable for a 700-product, review-derived dataset, but
+  occasionally still surfaces a weakly-related recommendation, traceable to
+  synthetic-user cross-category noise.
+- **No real checkout/payment** — the cart is a demo (client-side,
+  session-only), not a real commerce flow.
+- Dataset is scoped mostly to menswear/clothing categories rather than a
+  full cross-category catalog.
+
 ## Roadmap
 
 1. ✅ Data Collection & Cleaning
 2. ✅ Content-Based Filtering
-3. 🔲 Association Rules (co-occurrence based, using synthetic users)
-4. 🔲 Sentiment Analysis
-5. 🔲 Collaborative Filtering (synthetic users)
-6. 🔲 Combine into Hybrid System
-7. 🔲 Build FastAPI backend + simple frontend
-8. 🔲 Deploy
-
-## Outcome
-
-A full-stack ML project demonstrating multiple recommendation system
-techniques (content-based, association rules, sentiment-aware, and
-collaborative), combined into a hybrid engine with a FastAPI backend.
+3. ✅ Association Rules
+4. ✅ Popularity-Based Recommendation
+5. ✅ Sentiment Analysis
+6. ✅ Collaborative Filtering
+7. ✅ Hybrid Recommendation System
+8. ✅ FastAPI Backend
+9. ✅ Frontend (browsing, search, filters, cart, personalization)
+10. 🔲 Deployment
