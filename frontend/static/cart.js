@@ -20,7 +20,7 @@ function addToCart(product) {
       asin: product.asin,
       title: product.title,
       brand_name: product.brand_name,
-      price_value: product.price_value,
+      price_inr: product.price_inr,
       image_url: product.image_url,
       qty: 1,
     });
@@ -42,7 +42,7 @@ function updateQty(asin, qty) {
 }
 
 function cartTotal() {
-  return getCart().reduce((sum, item) => sum + (item.price_value || 0) * item.qty, 0);
+  return getCart().reduce((sum, item) => sum + (item.price_inr || 0) * item.qty, 0);
 }
 
 function cartCount() {

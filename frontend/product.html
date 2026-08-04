@@ -4,19 +4,38 @@
   <meta charset="UTF-8">
   <title>Product — ShopSense</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981',
+              600: '#059669', 700: '#047857',
+            },
+          },
+        },
+      },
+    }
+  </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
-
-  <nav class="bg-white shadow-sm border-b sticky top-0 z-10">
+<body class="bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 min-h-screen transition-colors">
+  
+  <nav class="bg-white dark:bg-zinc-800 shadow-sm border-b border-zinc-200 dark:border-zinc-700 sticky top-0 z-10 transition-colors">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold text-gray-900">ShopSense</h1>
-      <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
-        <a href="/app" class="hover:text-gray-900">Home</a>
-        <a href="/app/for-you.html" class="hover:text-gray-900">For You</a>
-        <a href="/app/cart.html" class="relative hover:text-gray-900">
+      <a href="/app" class="text-xl font-bold text-zinc-900 dark:text-zinc-100">ShopSense</a>
+      <div class="flex items-center gap-6 text-sm font-medium text-zinc-600 dark:text-zinc-300">
+        <a href="/app" class="hover:text-brand-600 dark:hover:text-brand-500">Home</a>
+        <a href="/app/for-you.html" class="hover:text-brand-600 dark:hover:text-brand-500">For You</a>
+        <a href="/app/cart.html" class="relative hover:text-brand-600 dark:hover:text-brand-500">
           Cart
-          <span id="cart-badge" class="hidden absolute -top-2 -right-3 bg-gray-900 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">0</span>
+          <span id="cart-badge" class="hidden absolute -top-2 -right-3 bg-brand-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">0</span>
         </a>
+        <button id="theme-toggle" onclick="toggleTheme()" class="text-base hover:scale-110 transition-transform">🌙</button>
       </div>
     </div>
   </nav>
@@ -41,7 +60,9 @@
     </section>
   </main>
 
+  <script src="/static/currency.js"></script>
   <script src="/static/cart.js"></script>
+  <script src="/static/theme-toggle.js"></script>
   <script src="/static/product-card.js"></script>
   <script src="/static/product.js"></script>
 </body>

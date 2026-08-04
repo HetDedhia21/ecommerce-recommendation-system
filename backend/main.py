@@ -14,6 +14,12 @@ app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 import ast
 from functools import lru_cache
 
+USD_TO_INR = 83.0
+
+MALE_NAMES = ["Aarav Sharma", "Rohan Mehta", "Vikram Nair", "Arjun Verma"]
+FEMALE_NAMES = ["Priya Patel", "Ananya Iyer", "Diya Reddy", "Sneha Kapoor"]
+
+
 def compute_audience(breadcrumb):
     if pd.isna(breadcrumb):
         return "Unknown"
@@ -34,11 +40,19 @@ def parse_all_images(all_images_str, max_images=6):
     return clean[:max_images]
 
 
+def add_price_inr(df):
+    """Add a price_inr column computed from price_value (USD)."""
+    df = df.copy()
+    df["price_inr"] = df["price_value"] * USD_TO_INR
+    return df
+
+
 @lru_cache(maxsize=1)
 def get_products_with_audience():
     df = pd.read_csv("data/processed/products_clean.csv")
     df["audience"] = df["breadcrumbs"].apply(compute_audience)
     return df
+
 
 @app.get("/app")
 def serve_frontend():
@@ -57,15 +71,17 @@ class RecommendationItem(BaseModel):
     brand_name: Optional[str] = None
     image_url: Optional[str] = None
     price_value: Optional[float] = None
+    price_inr: Optional[float] = None
     rating_stars_clean: Optional[float] = None
     final_score: Optional[float] = None
 
 
-class ProductOut(BaseModel):    
+class ProductOut(BaseModel):
     asin: str
     title: str
     brand_name: Optional[str] = None
     price_value: Optional[float] = None
+    price_inr: Optional[float] = None
     image_url: Optional[str] = None
     rating_stars_clean: Optional[float] = None
     rating_count_clean: Optional[int] = None
@@ -87,6 +103,12 @@ class ReviewOut(BaseModel):
     reviewText: str
     rating: float
     vader_label: str
+
+
+class DemoUserOut(BaseModel):
+    user_id: str
+    display_name: str
+
 
 # ---------- Startup: warm the model cache once, at boot, not on first request ----------
 
@@ -137,7 +159,8 @@ def list_products(
 
     total = len(df)
     page = df.iloc[offset: offset + limit]
-    return {"total": total, "items": page.to_dict(orient="records")}    
+    page = add_price_inr(page)
+    return {"total": total, "items": page.to_dict(orient="records")}
 
 
 @app.get("/products/search", response_model=ProductListResponse)
@@ -177,6 +200,7 @@ def search_products(
 
     total = len(df)
     page = df.iloc[offset: offset + limit]
+    page = add_price_inr(page)
     return {"total": total, "items": page.to_dict(orient="records")}
 
 
@@ -187,6 +211,7 @@ def get_product(asin: str):
     if len(row) == 0:
         raise HTTPException(status_code=404, detail=f"Product {asin} not found")
 
+    row = add_price_inr(row)
     product = row.iloc[0].to_dict()
     product["images"] = parse_all_images(row.iloc[0].get("all_images"))
 
@@ -211,6 +236,7 @@ def similar_products(asin: str, top_n: int = Query(10, le=50)):
         raise HTTPException(status_code=400, detail=str(e))
     if len(result) == 0:
         raise HTTPException(status_code=404, detail=f"No recommendations found for {asin}")
+    result = add_price_inr(result)
     return result.to_dict(orient="records")
 
 
@@ -223,6 +249,7 @@ def personalized_recommendations(user_id: str, top_n: int = Query(10, le=50)):
         raise HTTPException(status_code=400, detail=str(e))
     if len(result) == 0:
         raise HTTPException(status_code=404, detail=f"No recommendations found for user {user_id}")
+    result = add_price_inr(result)
     return result.to_dict(orient="records")
 
 
@@ -236,6 +263,7 @@ def full_hybrid_recommendations(
     if not user_id and not seed_asin:
         raise HTTPException(status_code=400, detail="Provide at least user_id or seed_asin")
     result, weights_used = hybrid_recommend(user_id=user_id, seed_asin=seed_asin, top_n=top_n)
+    result = add_price_inr(result)
     return result.to_dict(orient="records")
 
 
@@ -243,7 +271,8 @@ def full_hybrid_recommendations(
 def popular_products(top_n: int = Query(10, le=50)):
     """Popularity-based / trending products."""
     result = get_top_products(top_n)
-    return result[["asin", "title", "brand_name", "price_value", "image_url", "rating_stars_clean", "rating_count_clean"]].to_dict(
+    result = add_price_inr(result)
+    return result[["asin", "title", "brand_name", "price_value", "price_inr", "image_url", "rating_stars_clean", "rating_count_clean"]].to_dict(
         orient="records"
     )
 
@@ -262,3 +291,35 @@ def get_product_reviews(asin: str, limit: int = Query(5, le=20)):
     if "helpfulVoteCount" in product_reviews.columns:
         product_reviews = product_reviews.sort_values("helpfulVoteCount", ascending=False)
     return product_reviews.head(limit).to_dict(orient="records")
+
+
+@lru_cache(maxsize=1)
+def compute_demo_users():
+    reviews = pd.read_csv("data/processed/reviews_with_synthetic_users.csv")
+    products = get_products_with_audience()
+    reviews = reviews.merge(products[["asin", "audience"]], left_on="productASIN", right_on="asin", how="left")
+
+    def dominant_audience(group):
+        aud = group["audience"].dropna()
+        aud = aud[aud != "Unknown"]
+        return aud.mode().iloc[0] if len(aud) > 0 else None
+
+    grouped = reviews.groupby("synthetic_user_id")
+    user_info = grouped.size().rename("review_count").to_frame()
+    user_info["dominant_audience"] = grouped.apply(dominant_audience)
+
+    male_pool = user_info[user_info["dominant_audience"].isin(["Men", "Boys"])].sort_values("review_count", ascending=False)
+    female_pool = user_info[user_info["dominant_audience"].isin(["Women", "Girls"])].sort_values("review_count", ascending=False)
+
+    result = []
+    for i, uid in enumerate(male_pool.head(len(MALE_NAMES)).index):
+        result.append({"user_id": uid, "display_name": MALE_NAMES[i]})
+    for i, uid in enumerate(female_pool.head(len(FEMALE_NAMES)).index):
+        result.append({"user_id": uid, "display_name": FEMALE_NAMES[i]})
+
+    return result
+
+
+@app.get("/demo-users", response_model=list[DemoUserOut])
+def get_demo_users():
+    return compute_demo_users()

@@ -22,9 +22,9 @@ async function loadCategories() {
   const categories = await res.json();
 
   const listDiv = document.getElementById("category-list");
-  const allBtn = `<div class="cursor-pointer px-2 py-1 rounded-lg category-item ${state.category === "" ? "bg-gray-900 text-white" : "hover:bg-gray-100"}" data-cat="">All</div>`;
+  const allBtn = `<div class="cursor-pointer px-2 py-1 rounded-lg category-item ${state.category === "" ? "bg-brand-600 text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}" data-cat="">All</div>`;
   const items = categories.map(c =>
-    `<div class="cursor-pointer px-2 py-1 rounded-lg category-item flex justify-between ${state.category === c.name ? "bg-gray-900 text-white" : "hover:bg-gray-100"}" data-cat="${c.name}">
+    `<div class="cursor-pointer px-2 py-1 rounded-lg category-item flex justify-between ${state.category === c.name ? "bg-brand-600 text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}" data-cat="${c.name}">
        <span>${c.name}</span><span class="text-xs opacity-60">${c.count}</span>
      </div>`
   ).join("");
@@ -35,7 +35,7 @@ async function loadCategories() {
       state.category = el.dataset.cat;
       state.offset = 0;
       fetchAndRenderProducts();
-      loadCategories(); // re-render to highlight selection
+      loadCategories();
     });
   });
 }
@@ -45,8 +45,8 @@ function buildQueryParams() {
   params.set("limit", PAGE_SIZE);
   params.set("offset", state.offset);
   if (state.category) params.set("category", state.category);
-  if (state.minPrice) params.set("min_price", state.minPrice);
-  if (state.maxPrice) params.set("max_price", state.maxPrice);
+  if (state.minPrice) params.set("min_price", state.minPrice / 83);   // UI is INR, API filters in USD
+  if (state.maxPrice) params.set("max_price", state.maxPrice / 83);
   if (state.minRating) params.set("min_rating", state.minRating);
   if (state.sortBy) params.set("sort_by", state.sortBy);
   return params;
@@ -54,7 +54,7 @@ function buildQueryParams() {
 
 async function fetchAndRenderProducts() {
   const grid = document.getElementById("products-grid");
-  grid.innerHTML = `<p class="text-gray-400 text-sm">Loading...</p>`;
+  grid.innerHTML = `<p class="text-zinc-400 dark:text-zinc-500 text-sm">Loading...</p>`;
 
   const params = buildQueryParams();
   let url;
@@ -70,7 +70,7 @@ async function fetchAndRenderProducts() {
 
   grid.innerHTML = data.items.length
     ? data.items.map(renderProductCard).join("")
-    : `<p class="text-gray-400 text-sm col-span-3">No products match these filters.</p>`;
+    : `<p class="text-zinc-400 dark:text-zinc-500 text-sm col-span-3">No products match these filters.</p>`;
 
   const currentPage = Math.floor(state.offset / PAGE_SIZE) + 1;
   const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
@@ -79,8 +79,6 @@ async function fetchAndRenderProducts() {
   document.getElementById("prev-page").disabled = state.offset === 0;
   document.getElementById("next-page").disabled = state.offset + PAGE_SIZE >= data.total;
 }
-
-// --- Event wiring ---
 
 let searchTimeout;
 document.getElementById("search-box").addEventListener("input", (e) => {
