@@ -9,7 +9,7 @@ services:
       python backend/utils/generate_synthetic_users.py &&
       python models/content_based.py &&
       python models/association_rules.py &&
-      python models/popularity.py &&
       python models/sentiment_analysis.py &&
+      python models/popularity.py &&
       python models/collaborative_filtering.py
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
