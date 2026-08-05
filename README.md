@@ -7,11 +7,27 @@ served through a FastAPI backend and a working shopping-site frontend
 
 ## Live Demo
 
-[Add your deployed link here once live]
+**[https://ecommerce-recommendation-system-ljtu.onrender.com/app](https://ecommerce-recommendation-system-ljtu.onrender.com/app)**
+
+> Hosted on Render's free tier — the server sleeps after ~15 min of inactivity, so the first load may take 30-50 seconds to wake up. Subsequent loads are fast.
 
 ## Screenshots
 
-[Add 2-4 screenshots here: home page, product page, for-you page]
+| Home (Light) | Home (Dark) |
+|---|---|
+| ![Home light](docs/screenshots/home-light.png) | ![Home dark](docs/screenshots/home-dark.png) |
+
+| Category Filtering | Product Detail |
+|---|---|
+| ![Category filter](docs/screenshots/category.png) | ![Product detail](docs/screenshots/product-detail.png) |
+
+| Product Reviews & Sentiment | For You — Male Profile |
+|---|---|
+| ![Product reviews](docs/screenshots/product-reviews.png) | ![For You male](docs/screenshots/for-you-male.png) |
+
+| For You — Female Profile |
+|---|
+| ![For You female](docs/screenshots/for-you-female.png) |
 
 ## What This Project Demonstrates
 
